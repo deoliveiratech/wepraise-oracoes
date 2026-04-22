@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { GlassCard, Button, cn } from '../components/UI';
 import { Heart, Plus, Search, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { collection, query, getDocs, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
+import { collection, query, getDocs, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 interface Prayer {

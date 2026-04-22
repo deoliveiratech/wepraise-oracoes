@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronDown, ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
 import { Button, GlassCard, cn } from '../components/UI';
 import { getInitialSteps } from '../data/rosaryData';
-import type { RosaryStep } from '../data/rosaryData';
 import { useNavigate } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
