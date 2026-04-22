@@ -25,9 +25,12 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="fixed top-0 left-0 right-0 z-50 h-16 glass border-none rounded-none bg-background/50 flex items-center justify-between px-6">
-        <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-          WePraise
-        </h1>
+        <div className="flex flex-col items-start">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent leading-tight">
+            WePraise
+          </h1>
+          <span className="text-[8px] font-bold text-indigo-400/80 uppercase tracking-widest leading-none">Orações</span>
+        </div>
         {user && (
           <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-white transition-colors">
             <LogOut size={20} />
