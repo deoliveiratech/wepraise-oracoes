@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import RosaryPlayer from './pages/RosaryPlayer';
 import Profile from './pages/Profile';
+import Prayers from './pages/Prayers';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = useAuthStore((state) => state.user);
@@ -32,6 +33,7 @@ function App() {
         <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/rosary" element={<ProtectedRoute><RosaryPlayer /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/prayers" element={<ProtectedRoute><Prayers /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

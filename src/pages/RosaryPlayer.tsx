@@ -1,33 +1,86 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ChevronRight, ChevronDown, ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
 import { Button, GlassCard, cn } from '../components/UI';
 import { getInitialSteps } from '../data/rosaryData';
 import type { RosaryStep } from '../data/rosaryData';
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuthStore } from '../lib/store';
+import { useAuthStore, useAppStore } from '../lib/store';
 
 export default function RosaryPlayer() {
-  const [steps] = useState<RosaryStep[]>(getInitialSteps());
+  const steps = getInitialSteps();
   const [activeStep, setActiveStep] = useState(0);
   const [expanded, setExpanded] = useState<string | null>(steps[0].id);
   const [completed, setCompleted] = useState<string[]>([]);
+  const [subStepProgress, setSubStepProgress] = useState(0);
+  
   const navigate = useNavigate();
   const user = useAuthStore(state => state.user);
+  const { activeRosary, setActiveRosary, clearActiveRosary } = useAppStore();
+
+  // Load saved progress
+  useEffect(() => {
+    if (activeRosary) {
+      setActiveStep(activeRosary.activeStep);
+      setCompleted(activeRosary.completedSteps);
+      setSubStepProgress(activeRosary.subStepProgress);
+      setExpanded(steps[activeRosary.activeStep].id);
+    }
+  }, []);
+
+  // Save progress locally
+  useEffect(() => {
+    if (user) {
+      setActiveRosary({
+        activeStep,
+        completedSteps: completed,
+        subStepProgress,
+        lastUpdated: Date.now(),
+        date: activeRosary?.date || new Date().toISOString()
+      });
+    }
+  }, [activeStep, completed, subStepProgress, user]);
 
   const handleToggle = (id: string) => {
     setExpanded(expanded === id ? null : id);
   };
 
-  const handleCompleteStep = (id: string, index: number) => {
-    if (!completed.includes(id)) {
-      setCompleted([...completed, id]);
+  const handleSubStepClick = (index: number) => {
+    if (index === subStepProgress) {
+      setSubStepProgress(prev => prev + 1);
     }
+  };
+
+  const handleCompleteStep = async (id: string, index: number) => {
+    const step = steps[index];
+    if (step.subStepCount && subStepProgress < step.subStepCount) {
+      return;
+    }
+
+    const newCompleted = !completed.includes(id) ? [...completed, id] : completed;
+    setCompleted(newCompleted);
+    
     if (index < steps.length - 1) {
-      setActiveStep(index + 1);
-      setExpanded(steps[index + 1].id);
+      const nextStep = index + 1;
+      setActiveStep(nextStep);
+      setExpanded(steps[nextStep].id);
+      setSubStepProgress(0);
+
+      // Save to Firebase for cross-device resume
+      if (user) {
+        try {
+          await setDoc(doc(db, 'activeRosaries', user.uid), {
+            activeStep: nextStep,
+            completedSteps: newCompleted,
+            subStepProgress: 0,
+            lastUpdated: serverTimestamp()
+          });
+        } catch (error) {
+          console.error('Erro ao salvar progresso no Firebase:', error);
+        }
+      }
     } else {
       handleFinishRosary();
     }
@@ -41,10 +94,23 @@ export default function RosaryPlayer() {
         completedAt: serverTimestamp(),
         type: 'full'
       });
+      clearActiveRosary();
+      // Remove from activeRosaries in Firebase
+      await setDoc(doc(db, 'activeRosaries', user.uid), { completed: true });
       alert('Terço finalizado com sucesso!');
       navigate('/');
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const resetProgress = () => {
+    if (confirm('Deseja reiniciar a oração do terço?')) {
+      setActiveStep(0);
+      setCompleted([]);
+      setSubStepProgress(0);
+      setExpanded(steps[0].id);
+      clearActiveRosary();
     }
   };
 
@@ -55,7 +121,9 @@ export default function RosaryPlayer() {
           <ArrowLeft size={24} />
         </button>
         <h1 className="text-xl font-bold">Oração do Terço</h1>
-        <div className="w-10"></div>
+        <button onClick={resetProgress} className="p-2 text-slate-400 hover:text-white transition-colors" title="Reiniciar">
+          <RotateCcw size={20} />
+        </button>
       </div>
 
       <div className="relative space-y-3">
@@ -107,14 +175,47 @@ export default function RosaryPlayer() {
                       transition={{ duration: 0.3 }}
                     >
                       <div className="px-4 pb-4 space-y-4">
-                        <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-700/30">
+                        <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-700/30 space-y-4">
                           <p className="text-slate-300 leading-relaxed italic">"{step.prayer}"</p>
+                          
+                          {step.subStepCount && (
+                            <div className="space-y-3 pt-2">
+                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
+                                {subStepProgress} de {step.subStepCount} Ave-Marias
+                              </p>
+                              <div className="flex flex-wrap justify-center gap-2">
+                                {Array.from({ length: step.subStepCount }).map((_, i) => (
+                                  <button
+                                    key={i}
+                                    onClick={() => handleSubStepClick(i)}
+                                    className={cn(
+                                      "w-8 h-8 rounded-full border-2 transition-all duration-300 flex items-center justify-center text-[10px] font-bold",
+                                      i < subStepProgress 
+                                        ? "bg-indigo-500 border-indigo-400 text-white shadow-lg shadow-indigo-500/20" 
+                                        : i === subStepProgress 
+                                          ? "bg-white/10 border-indigo-500 text-indigo-400 animate-pulse" 
+                                          : "bg-transparent border-slate-700 text-slate-600"
+                                    )}
+                                  >
+                                    {i + 1}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
+
                         <Button 
                           onClick={() => handleCompleteStep(step.id, index)} 
-                          className="w-full flex items-center justify-center gap-2 py-3"
+                          disabled={step.subStepCount ? subStepProgress < step.subStepCount : false}
+                          className={cn(
+                            "w-full flex items-center justify-center gap-2 py-3 transition-all",
+                            step.subStepCount && subStepProgress < step.subStepCount ? "opacity-50 cursor-not-allowed grayscale" : ""
+                          )}
                         >
-                          Concluir Estágio
+                          {step.subStepCount && subStepProgress < step.subStepCount 
+                            ? `Complete as Ave-Marias (${subStepProgress}/${step.subStepCount})` 
+                            : 'Concluir Estágio'}
                           <ArrowRight size={18} />
                         </Button>
                       </div>

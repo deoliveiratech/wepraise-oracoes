@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, CheckCircle2, Play, X, Clock, AlertCircle } 
 import { GlassCard, Button, cn } from '../components/UI';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuthStore } from '../lib/store';
+import { useAuthStore, useAppStore } from '../lib/store';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,6 +19,7 @@ export const Calendar = () => {
     rosaryTimes: ['08:00', '12:00', '18:00']
   });
   const user = useAuthStore((state) => state.user);
+  const { activeRosary } = useAppStore();
 
   useEffect(() => {
     if (user) {
@@ -97,6 +98,11 @@ export const Calendar = () => {
         </div>
 
         <div className="grid grid-cols-7 gap-1.5">
+          {/* Empty slots for days before the first of the month */}
+          {Array.from({ length: startOfMonth(currentDate).getDay() }).map((_, i) => (
+            <div key={`empty-${i}`} className="aspect-square" />
+          ))}
+          
           {days.map((day, i) => {
             const { count, isGoalMet, isPartial } = getDayStatus(day);
             const today = isToday(day);
@@ -200,11 +206,13 @@ export const Calendar = () => {
                         ) : (
                           <Button 
                             onClick={() => navigate('/rosary')}
-                            variant="secondary" 
-                            className="py-1 px-3 text-[10px] flex items-center gap-1.5"
+                            variant="primary" 
+                            className="py-1 px-3 text-[10px] flex items-center gap-1.5 border-none shadow-indigo-500/30"
                           >
                             <Play size={10} fill="currentColor" />
-                            Rezar
+                            {activeRosary && selectedDate && isSameDay(new Date(activeRosary.date), selectedDate) 
+                              ? 'Continuar...' 
+                              : 'Rezar'}
                           </Button>
                         )}
                       </div>

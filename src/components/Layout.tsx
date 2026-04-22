@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, BookOpen, User, LogOut } from 'lucide-react';
+import { Home, BookOpen, User, LogOut, Heart } from 'lucide-react';
 import { useAuthStore } from '../lib/store';
 import { auth } from '../lib/firebase';
 import { cn } from './UI';
@@ -18,6 +18,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   const navItems = [
     { icon: Home, path: '/', label: 'Início' },
     { icon: BookOpen, path: '/rosary', label: 'Terço' },
+    { icon: Heart, path: '/prayers', label: 'Orações' },
     { icon: User, path: '/profile', label: 'Perfil' },
   ];
 
@@ -38,8 +39,8 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         {children}
       </main>
 
-      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-3rem)] max-w-md">
-        <div className="glass flex items-center justify-around py-3 px-2 shadow-2xl shadow-indigo-500/10">
+      <nav className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-3rem)] max-w-md">
+        <div className="glass flex items-center justify-around py-1.5 px-2 shadow-2xl shadow-indigo-500/10">
           {navItems.map((item) => (
             <button
               key={item.path}

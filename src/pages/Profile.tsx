@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../lib/store';
 import { GlassCard, cn } from '../components/UI';
-import { User, Bell, Flame, Target, LogOut, ChevronRight, Settings, Clock } from 'lucide-react';
+import { User, Bell, Flame, Target, LogOut, ChevronRight, Settings, Clock, Book } from 'lucide-react';
+import { allMysteries, getMysteriesByDay } from '../data/rosaryData';
 import { auth, db } from '../lib/firebase';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -185,6 +186,37 @@ export default function Profile() {
             <div className="w-10 h-5 bg-indigo-500 rounded-full relative transition-colors">
               <div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full" />
             </div>
+          </div>
+        </GlassCard>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest px-1">Mistérios do Terço</h2>
+        <GlassCard className="p-0 overflow-hidden">
+          <div className="p-4 bg-indigo-500/10 border-b border-white/5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Hoje é dia de:</p>
+                <h3 className="text-lg font-bold text-white">{getMysteriesByDay().name}</h3>
+              </div>
+              <Book size={24} className="text-indigo-400" />
+            </div>
+          </div>
+          <div className="p-4 space-y-4">
+            {Object.entries(allMysteries).map(([key, m]) => {
+              const isToday = getMysteriesByDay().name === m.name;
+              return (
+                <div key={key} className={cn("space-y-1 p-2 rounded-lg transition-colors", isToday ? "bg-white/5" : "")}>
+                  <div className="flex items-center justify-between">
+                    <p className={cn("text-sm font-bold", isToday ? "text-indigo-400" : "text-slate-200")}>{m.name}</p>
+                    <p className="text-[10px] text-slate-500">{m.days.map(d => ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][d]).join(' e ')}</p>
+                  </div>
+                  <p className="text-[10px] text-slate-400 leading-relaxed italic line-clamp-2">
+                    {m.items.join(' • ')}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </GlassCard>
       </section>

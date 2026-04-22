@@ -6,10 +6,18 @@ interface UserState {
   setUser: (user: any | null) => void;
 }
 
+interface RosaryProgress {
+  activeStep: number;
+  completedSteps: string[];
+  subStepProgress: number;
+  lastUpdated: number;
+  date: string;
+}
+
 interface AppState {
-  currentRosaryProgress: number;
-  setRosaryProgress: (progress: number) => void;
-  resetRosaryProgress: () => void;
+  activeRosary: RosaryProgress | null;
+  setActiveRosary: (progress: RosaryProgress | null) => void;
+  clearActiveRosary: () => void;
 }
 
 export const useAuthStore = create<UserState>()(
@@ -24,8 +32,15 @@ export const useAuthStore = create<UserState>()(
   )
 );
 
-export const useAppStore = create<AppState>((set) => ({
-  currentRosaryProgress: 0,
-  setRosaryProgress: (progress) => set({ currentRosaryProgress: progress }),
-  resetRosaryProgress: () => set({ currentRosaryProgress: 0 }),
-}));
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
+      activeRosary: null,
+      setActiveRosary: (progress) => set({ activeRosary: progress }),
+      clearActiveRosary: () => set({ activeRosary: null }),
+    }),
+    {
+      name: 'app-storage',
+    }
+  )
+);
