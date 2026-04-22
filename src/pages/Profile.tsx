@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '../lib/store';
-import { GlassCard, Button, cn } from '../components/UI';
+import { GlassCard, cn } from '../components/UI';
 import { User, Bell, Flame, Target, LogOut, ChevronRight, Settings, Clock } from 'lucide-react';
 import { auth, db } from '../lib/firebase';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,6 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 export default function Profile() {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
     dailyGoal: 1,
     notifications: true,
@@ -41,14 +40,11 @@ export default function Profile() {
   };
 
   const handleSaveSettings = async (newSettings: any) => {
-    setLoading(true);
     try {
       await setDoc(doc(db, 'userSettings', user.uid), newSettings);
       setSettings(newSettings);
     } catch (error) {
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
