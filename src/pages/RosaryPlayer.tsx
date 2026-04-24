@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronDown, ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
 import { Button, GlassCard, cn } from '../components/UI';
@@ -14,6 +14,22 @@ export default function RosaryPlayer() {
   const [expanded, setExpanded] = useState<string | null>(steps[0].id);
   const [completed, setCompleted] = useState<string[]>([]);
   const [subStepProgress, setSubStepProgress] = useState(0);
+  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+  
+  // Scroll to active/expanded step
+  useEffect(() => {
+    if (expanded) {
+      const activeIndex = steps.findIndex(s => s.id === expanded);
+      if (activeIndex !== -1 && stepRefs.current[activeIndex]) {
+        setTimeout(() => {
+          stepRefs.current[activeIndex]?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }, 300); // Wait for expansion animation
+      }
+    }
+  }, [expanded]);
   
   const navigate = useNavigate();
   const user = useAuthStore(state => state.user);
@@ -135,7 +151,11 @@ export default function RosaryPlayer() {
           const isExpanded = expanded === step.id;
 
           return (
-            <div key={step.id} className="relative pl-12">
+            <div 
+              key={step.id} 
+              ref={el => stepRefs.current[index] = el}
+              className="relative pl-12"
+            >
               {/* Step Node */}
               <div 
                 className={cn(
@@ -175,20 +195,31 @@ export default function RosaryPlayer() {
                     >
                       <div className="px-4 pb-4 space-y-4">
                         <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-700/30 space-y-4">
-                          <p className="text-slate-300 leading-relaxed italic">"{step.prayer}"</p>
+                          {step.prePrayer && (
+                            <div className="pb-4 border-b border-white/5">
+                              <p className="text-slate-300 leading-relaxed italic whitespace-pre-line text-sm opacity-80">
+                                {step.prePrayer}
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="space-y-2">
+                            <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Oração Principal</p>
+                            <p className="text-slate-300 leading-relaxed italic whitespace-pre-line">"{step.prayer}"</p>
+                          </div>
                           
                           {step.subStepCount && (
                             <div className="space-y-3 pt-2">
                               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
                                 {subStepProgress} de {step.subStepCount} Ave-Marias
                               </p>
-                              <div className="flex flex-wrap justify-center gap-2">
+                              <div className="flex flex-wrap justify-center gap-3">
                                 {Array.from({ length: step.subStepCount }).map((_, i) => (
                                   <button
                                     key={i}
                                     onClick={() => handleSubStepClick(i)}
                                     className={cn(
-                                      "w-8 h-8 rounded-full border-2 transition-all duration-300 flex items-center justify-center text-[10px] font-bold",
+                                      "w-10 h-10 rounded-full border-2 transition-all duration-300 flex items-center justify-center text-xs font-bold",
                                       i < subStepProgress 
                                         ? "bg-indigo-500 border-indigo-400 text-white shadow-lg shadow-indigo-500/20" 
                                         : i === subStepProgress 
@@ -200,6 +231,14 @@ export default function RosaryPlayer() {
                                   </button>
                                 ))}
                               </div>
+                            </div>
+                          )}
+
+                          {step.postPrayer && (
+                            <div className="pt-4 border-t border-white/5">
+                              <p className="text-slate-300 leading-relaxed italic whitespace-pre-line text-sm opacity-80">
+                                {step.postPrayer}
+                              </p>
                             </div>
                           )}
                         </div>

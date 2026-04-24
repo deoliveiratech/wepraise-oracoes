@@ -3,6 +3,8 @@ export interface RosaryStep {
   title: string;
   description: string;
   prayer: string;
+  prePrayer?: string;
+  postPrayer?: string;
   type: 'initial' | 'mystery' | 'decade' | 'closing';
   subStepCount?: number;
 }
@@ -31,6 +33,10 @@ export const prayers = {
   salveRainha: {
     title: "Salve Rainha",
     text: "Salve, Rainha, Mãe de misericórdia, vida, doçura e esperança nossa, salve! A vós bradamos os degredados filhos de Eva. A vós suspiramos, gemendo e chorando neste vale de lágrimas. Eia, pois, advogada nossa, esses vossos olhos misericordiosos a nós volvei, e depois deste desterro mostrai-nos Jesus, bendito fruto do vosso ventre. Ó clemente, ó piedosa, ó doce sempre Virgem Maria. Rogai por nós, Santa Mãe de Deus. Para que sejamos dignos das promessas de Cristo. Amém."
+  },
+  agradecimento: {
+    title: "Agradecimento",
+    text: "Infinitas graças vos damos, Soberana Rainha, pelos benefícios que todos os dias recebemos de vossas mãos liberais. Dignai-vos, agora e para sempre, tomar-nos debaixo do vosso poderoso amparo e, para mais vos obrigar, vos saudamos com uma Salve Rainha."
   }
 };
 
@@ -127,7 +133,7 @@ export const getInitialSteps = (mysteryType?: keyof typeof allMysteries): Rosary
       id: 'intro-gloria',
       title: 'Glória',
       description: 'Doxologia',
-      prayer: prayers.gloria.text,
+      prayer: `${prayers.gloria.text}\n\n${prayers.ohMeuJesus.text}`,
       type: 'initial'
     }
   ];
@@ -139,12 +145,22 @@ export const getInitialSteps = (mysteryType?: keyof typeof allMysteries): Rosary
       title: `${i+1}º Mistério`,
       description: mystery,
       prayer: prayers.aveMaria.text,
+      prePrayer: prayers.paiNosso.text,
+      postPrayer: `${prayers.gloria.text}\n\n${prayers.ohMeuJesus.text}`,
       type: 'mystery',
       subStepCount: 10
     });
   });
 
   // Closing
+  steps.push({
+    id: 'agradecimento',
+    title: 'Agradecimento',
+    description: 'Oração Final',
+    prayer: prayers.agradecimento.text,
+    type: 'closing'
+  });
+
   steps.push({
     id: 'salve-rainha',
     title: 'Salve Rainha',

@@ -12,7 +12,7 @@ git remote add origin https://github.com/deoliveiratech/wepraise-oracoes.git
 git push -u origin master
 
 git add .
-git commit -m "Correção variáveis não utilizadas"
+git commit -m "Correções build"
 git push
 
 #######################
