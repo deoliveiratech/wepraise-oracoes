@@ -4,6 +4,7 @@ import { Home, BookOpen, User, LogOut, Heart } from 'lucide-react';
 import { useAuthStore } from '../lib/store';
 import { auth } from '../lib/firebase';
 import { cn } from './UI';
+import { PwaInstallPrompt } from './PwaInstallPrompt';
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen relative">
       <header className="fixed top-0 left-0 right-0 z-50 h-16 glass border-none rounded-none bg-background/50 flex items-center justify-between px-6">
         <div className="flex flex-col items-start">
           <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent leading-tight">
@@ -41,6 +42,8 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
       <main className="flex-grow pt-18 pb-16 px-6 max-w-2xl mx-auto w-full">
         {children}
       </main>
+
+      <PwaInstallPrompt />
 
       <nav className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-3rem)] max-w-md">
         <div className="glass flex items-center justify-around py-1.5 px-2 shadow-2xl shadow-indigo-500/10">
