@@ -153,7 +153,7 @@ export default function RosaryPlayer() {
           return (
             <div 
               key={step.id} 
-              ref={el => stepRefs.current[index] = el}
+              ref={el => { stepRefs.current[index] = el; }}
               className="relative pl-12"
             >
               {/* Step Node */}
