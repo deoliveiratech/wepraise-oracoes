@@ -11,6 +11,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['apple-touch-icon.png', 'mask-icon.svg'],
+      manifestFilename: 'manifest.json',
       manifest: {
         name: 'WePraise Orações',
         short_name: 'WePraise',
@@ -23,6 +24,7 @@ export default defineConfig({
         scope: '/',
         id: '/',
         categories: ['lifestyle', 'education'],
+        lang: 'pt-BR',
         icons: [
           {
             src: 'pwa-192x192.png',
