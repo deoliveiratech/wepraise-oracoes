@@ -10,14 +10,18 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['apple-touch-icon.png'],
       manifest: {
         name: 'WePraise Orações',
         short_name: 'WePraise',
-        description: 'Aplicação de orações católicas e Terço',
+        id: '/?source=pwa',
+        start_url: '/?source=pwa',
+        description: 'Seu companheiro espiritual para orações diárias e o Santo Terço.',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
+        orientation: 'portrait',
+        categories: ['lifestyle', 'education'],
         icons: [
           {
             src: 'pwa-192x192.png',

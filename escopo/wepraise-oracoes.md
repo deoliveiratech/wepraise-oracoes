@@ -12,7 +12,7 @@ git remote add origin https://github.com/deoliveiratech/wepraise-oracoes.git
 git push -u origin master
 
 git add .
-git commit -m "Correções build"
+git commit -m "Implementação completa PWA"
 git push
 
 #######################
@@ -29,3 +29,21 @@ LAYOUT E DESIGN:
 - Login com email/senha via Firebase Auth
 - Persistência de sessão
 - Estrutura multi-usuário (cada usuário vê apenas seus dados)
+
+
+#Versão mobile#
+
+Gostaria que você criasse um novo projeto, em Expo para código nativo Android, todo o projeto atual que temos aqui do 'wepraise-oracoes'
+
+eas secret:create --scope project --name EXPO_PUBLIC_FIREBASE_API_KEY --value "AIzaSyBTKTF5YuryFbZs6VzPTvdqhS3NGhgZQb8"
+eas secret:create --scope project --name EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN --value "wepraiseoracoes.firebaseapp.com"
+eas secret:create --scope project --name EXPO_PUBLIC_FIREBASE_PROJECT_ID --value "wepraiseoracoes"
+eas secret:create --scope project --name EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET --value "wepraiseoracoes.firebasestorage.app"
+eas secret:create --scope project --name EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID --value "339468175755"
+eas secret:create --scope project --name EXPO_PUBLIC_FIREBASE_APP_ID --value "1:339468175755:web:68e870111db1d64dd3c78e"
+
+
+Gere um banner no tamanho adequado para meu perfil do linkedin inserindo na imagem os seguintes dados:
+“Fullstack Developer”
+“Python | Node | React | IA”
+“Construindo sistemas e soluções reais com tecnologia”
