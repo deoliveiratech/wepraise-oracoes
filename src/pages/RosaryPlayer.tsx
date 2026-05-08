@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronDown, ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
+import { ChevronRight, ChevronDown, ArrowRight } from 'lucide-react';
 import { Button, GlassCard, cn } from '../components/UI';
 import { getInitialSteps } from '../data/rosaryData';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +16,10 @@ export default function RosaryPlayer() {
   const [subStepProgress, setSubStepProgress] = useState(0);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   
+  const navigate = useNavigate();
+  const user = useAuthStore(state => state.user);
+  const { activeRosary, setActiveRosary, clearActiveRosary, resetRosaryTrigger } = useAppStore();
+
   // Scroll to active/expanded step
   useEffect(() => {
     if (expanded) {
@@ -24,16 +28,12 @@ export default function RosaryPlayer() {
         setTimeout(() => {
           stepRefs.current[activeIndex]?.scrollIntoView({
             behavior: 'smooth',
-            block: 'center'
+            block: 'start'
           });
-        }, 300); // Wait for expansion animation
+        }, 300);
       }
     }
-  }, [expanded]);
-  
-  const navigate = useNavigate();
-  const user = useAuthStore(state => state.user);
-  const { activeRosary, setActiveRosary, clearActiveRosary } = useAppStore();
+  }, [expanded, steps]);
 
   // Load saved progress
   useEffect(() => {
@@ -44,6 +44,21 @@ export default function RosaryPlayer() {
       setExpanded(steps[activeRosary.activeStep].id);
     }
   }, []);
+
+  // Handle external reset trigger
+  useEffect(() => {
+    if (resetRosaryTrigger > 0) {
+      handleResetAction();
+    }
+  }, [resetRosaryTrigger]);
+
+  const handleResetAction = () => {
+    setActiveStep(0);
+    setCompleted([]);
+    setSubStepProgress(0);
+    setExpanded(steps[0].id);
+    clearActiveRosary();
+  };
 
   // Save progress locally
   useEffect(() => {
@@ -56,7 +71,7 @@ export default function RosaryPlayer() {
         date: activeRosary?.date || new Date().toISOString()
       });
     }
-  }, [activeStep, completed, subStepProgress, user]);
+  }, [activeStep, completed, subStepProgress, user, activeRosary?.date, setActiveRosary]);
 
   const handleToggle = (id: string) => {
     setExpanded(expanded === id ? null : id);
@@ -83,7 +98,6 @@ export default function RosaryPlayer() {
       setExpanded(steps[nextStep].id);
       setSubStepProgress(0);
 
-      // Save to Firebase for cross-device resume
       if (user) {
         try {
           await setDoc(doc(db, 'activeRosaries', user.uid), {
@@ -110,7 +124,6 @@ export default function RosaryPlayer() {
         type: 'full'
       });
       clearActiveRosary();
-      // Remove from activeRosaries in Firebase
       await setDoc(doc(db, 'activeRosaries', user.uid), { completed: true });
       alert('Terço finalizado com sucesso!');
       navigate('/');
@@ -119,28 +132,8 @@ export default function RosaryPlayer() {
     }
   };
 
-  const resetProgress = () => {
-    if (confirm('Deseja reiniciar a oração do terço?')) {
-      setActiveStep(0);
-      setCompleted([]);
-      setSubStepProgress(0);
-      setExpanded(steps[0].id);
-      clearActiveRosary();
-    }
-  };
-
   return (
     <div className="space-y-4 pb-12">
-      <div className="flex items-center justify-between mb-4">
-        <button onClick={() => navigate('/')} className="p-2 text-slate-400 hover:text-white">
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="text-xl font-bold">Oração do Terço</h1>
-        <button onClick={resetProgress} className="p-2 text-slate-400 hover:text-white transition-colors" title="Reiniciar">
-          <RotateCcw size={20} />
-        </button>
-      </div>
-
       <div className="relative space-y-3">
         {/* Progress Line */}
         <div className="absolute left-6 top-4 bottom-4 w-0.5 bg-slate-800 -z-10" />
@@ -154,7 +147,7 @@ export default function RosaryPlayer() {
             <div 
               key={step.id} 
               ref={el => { stepRefs.current[index] = el; }}
-              className="relative pl-12"
+              className="relative pl-12 scroll-mt-20"
             >
               {/* Step Node */}
               <div 

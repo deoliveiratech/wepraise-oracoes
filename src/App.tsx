@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './lib/firebase';
-import { useAuthStore } from './lib/store';
+import { useAuthStore, useAppStore } from './lib/store';
 import { Layout } from './components/Layout';
 import { SplashScreen } from './components/SplashScreen';
 import Dashboard from './pages/Dashboard';
@@ -19,14 +19,26 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   const setUser = useAuthStore((state) => state.setUser);
+  const setIsOnline = useAppStore((state) => state.setIsOnline);
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
     });
-    return () => unsubscribe();
-  }, [setUser]);
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [setUser, setIsOnline]);
 
   return (
     <>

@@ -10,8 +10,9 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['apple-touch-icon.png', 'mask-icon.svg'],
+      injectRegister: 'auto',
       manifestFilename: 'manifest.json',
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'mask-icon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         name: 'WePraise Orações',
         short_name: 'WePraise',
@@ -22,19 +23,13 @@ export default defineConfig({
         orientation: 'portrait',
         start_url: '/',
         scope: '/',
-        id: '/',
-        categories: ['lifestyle', 'education'],
         lang: 'pt-BR',
         icons: [
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
             src: 'pwa-512x512.png',
@@ -60,7 +55,7 @@ export default defineConfig({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                maxAgeSeconds: 60 * 60 * 24 * 365
               },
               cacheableResponse: {
                 statuses: [0, 200]
