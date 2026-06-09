@@ -15,6 +15,7 @@ export default function RosaryPlayer() {
   const [completed, setCompleted] = useState<string[]>([]);
   const [subStepProgress, setSubStepProgress] = useState(0);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const isFinishing = useRef(false);
   
   const navigate = useNavigate();
   const user = useAuthStore(state => state.user);
@@ -38,6 +39,15 @@ export default function RosaryPlayer() {
   // Load saved progress
   useEffect(() => {
     if (activeRosary) {
+      // If all steps are already completed, the rosary is done — reset and go home
+      const allStepIds = steps.map(s => s.id);
+      const allCompleted = allStepIds.every(id => activeRosary.completedSteps.includes(id));
+      if (allCompleted) {
+        clearActiveRosary();
+        navigate('/');
+        return;
+      }
+
       setActiveStep(activeRosary.activeStep);
       setCompleted(activeRosary.completedSteps);
       setSubStepProgress(activeRosary.subStepProgress);
@@ -62,7 +72,7 @@ export default function RosaryPlayer() {
 
   // Save progress locally
   useEffect(() => {
-    if (user) {
+    if (user && !isFinishing.current) {
       setActiveRosary({
         activeStep,
         completedSteps: completed,
@@ -83,6 +93,8 @@ export default function RosaryPlayer() {
     }
   };
 
+  const isLastStep = (index: number) => index === steps.length - 1;
+
   const handleCompleteStep = async (id: string, index: number) => {
     const step = steps[index];
     if (step.subStepCount && subStepProgress < step.subStepCount) {
@@ -92,7 +104,11 @@ export default function RosaryPlayer() {
     const newCompleted = !completed.includes(id) ? [...completed, id] : completed;
     setCompleted(newCompleted);
     
-    if (index < steps.length - 1) {
+    if (isLastStep(index)) {
+      // Last step — finish the rosary
+      isFinishing.current = true;
+      handleFinishRosary();
+    } else {
       const nextStep = index + 1;
       setActiveStep(nextStep);
       setExpanded(steps[nextStep].id);
@@ -110,8 +126,17 @@ export default function RosaryPlayer() {
           console.error('Erro ao salvar progresso no Firebase:', error);
         }
       }
-    } else {
-      handleFinishRosary();
+    }
+  };
+
+  const scrollToSection = (containerId: string, targetId: string) => {
+    const container = document.getElementById(containerId);
+    const target = document.getElementById(targetId);
+    if (container && target) {
+      container.scrollTo({
+        top: target.offsetTop - 16,
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -187,49 +212,75 @@ export default function RosaryPlayer() {
                       transition={{ duration: 0.3 }}
                     >
                       <div className="px-4 pb-4 space-y-4">
-                        <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-700/30 space-y-4">
+                        <div 
+                          id={`${step.id}-container`}
+                          className="p-4 bg-slate-900/50 rounded-xl border border-slate-700/30 space-y-4 max-h-[60vh] overflow-y-auto relative scroll-smooth [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-700/50 [&::-webkit-scrollbar-thumb]:rounded-full"
+                        >
                           {step.prePrayer && (
-                            <div className="pb-4 border-b border-white/5">
+                            <div id={`${step.id}-pre`} className="pb-4 border-b border-white/5 space-y-3">
+                              <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Oração Inicial</p>
                               <p className="text-slate-300 leading-relaxed italic whitespace-pre-line text-sm opacity-80">
                                 {step.prePrayer}
                               </p>
-                            </div>
-                          )}
-
-                          <div className="space-y-2">
-                            <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Oração Principal</p>
-                            <p className="text-slate-300 leading-relaxed italic whitespace-pre-line">"{step.prayer}"</p>
-                          </div>
-                          
-                          {step.subStepCount && (
-                            <div className="space-y-3 pt-2">
-                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
-                                {subStepProgress} de {step.subStepCount} Ave-Marias
-                              </p>
-                              <div className="flex flex-wrap justify-center gap-3">
-                                {Array.from({ length: step.subStepCount }).map((_, i) => (
-                                  <button
-                                    key={i}
-                                    onClick={() => handleSubStepClick(i)}
-                                    className={cn(
-                                      "w-10 h-10 rounded-full border-2 transition-all duration-300 flex items-center justify-center text-xs font-bold",
-                                      i < subStepProgress 
-                                        ? "bg-indigo-500 border-indigo-400 text-white shadow-lg shadow-indigo-500/20" 
-                                        : i === subStepProgress 
-                                          ? "bg-white/10 border-indigo-500 text-indigo-400 animate-pulse" 
-                                          : "bg-transparent border-slate-700 text-slate-600"
-                                    )}
-                                  >
-                                    {i + 1}
-                                  </button>
-                                ))}
+                              <div className="flex justify-end pt-1">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); scrollToSection(`${step.id}-container`, `${step.id}-main`); }}
+                                  className="flex items-center gap-1 text-[10px] text-indigo-400 font-bold uppercase hover:text-indigo-300 transition-colors bg-indigo-500/10 px-3 py-1.5 rounded-full"
+                                >
+                                  Próxima Oração <ChevronDown size={14} />
+                                </button>
                               </div>
                             </div>
                           )}
 
+                          <div id={`${step.id}-main`} className="space-y-4 pt-2 pb-2">
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Oração Principal</p>
+                              <p className="text-slate-300 leading-relaxed italic whitespace-pre-line">"{step.prayer}"</p>
+                            </div>
+                            
+                            {step.subStepCount && (
+                              <div className="space-y-3 pt-2">
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
+                                  {subStepProgress} de {step.subStepCount} Ave-Marias
+                                </p>
+                                <div className="flex flex-wrap justify-center gap-3">
+                                  {Array.from({ length: step.subStepCount }).map((_, i) => (
+                                    <button
+                                      key={i}
+                                      onClick={(e) => { e.stopPropagation(); handleSubStepClick(i); }}
+                                      className={cn(
+                                        "w-10 h-10 rounded-full border-2 transition-all duration-300 flex items-center justify-center text-xs font-bold shrink-0",
+                                        i < subStepProgress 
+                                          ? "bg-indigo-500 border-indigo-400 text-white shadow-lg shadow-indigo-500/20" 
+                                          : i === subStepProgress 
+                                            ? "bg-white/10 border-indigo-500 text-indigo-400 animate-pulse" 
+                                            : "bg-transparent border-slate-700 text-slate-600"
+                                      )}
+                                    >
+                                      {i + 1}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {step.postPrayer && (
+                              <div className="flex justify-end pt-2">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); scrollToSection(`${step.id}-container`, `${step.id}-post`); }}
+                                  className="flex items-center gap-1 text-[10px] text-indigo-400 font-bold uppercase hover:text-indigo-300 transition-colors bg-indigo-500/10 px-3 py-1.5 rounded-full"
+                                >
+                                  Oração Final <ChevronDown size={14} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
                           {step.postPrayer && (
-                            <div className="pt-4 border-t border-white/5">
-                              <p className="text-slate-300 leading-relaxed italic whitespace-pre-line text-sm opacity-80">
+                            <div id={`${step.id}-post`} className="pt-4 border-t border-white/5">
+                              <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2">Oração Final</p>
+                              <p className="text-slate-300 leading-relaxed italic whitespace-pre-line text-sm opacity-80 pb-4">
                                 {step.postPrayer}
                               </p>
                             </div>
@@ -246,7 +297,7 @@ export default function RosaryPlayer() {
                         >
                           {step.subStepCount && subStepProgress < step.subStepCount 
                             ? `Complete as Ave-Marias (${subStepProgress}/${step.subStepCount})` 
-                            : 'Concluir Estágio'}
+                            : isLastStep(index) ? 'Concluir Terço ✝️' : 'Concluir Estágio'}
                           <ArrowRight size={18} />
                         </Button>
                       </div>

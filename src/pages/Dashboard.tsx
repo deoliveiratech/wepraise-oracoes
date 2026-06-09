@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar } from '../components/Calendar';
 import { Button, GlassCard, cn } from '../components/UI';
 import { Play, Flame, Trophy, CheckCircle2 } from 'lucide-react';
 import { useAuthStore, useAppStore } from '../lib/store';
+import { getInitialSteps } from '../data/rosaryData';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { startOfDay, subDays } from 'date-fns';
@@ -11,7 +12,19 @@ import { startOfDay, subDays } from 'date-fns';
 export default function Dashboard() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
-  const { activeRosary } = useAppStore();
+  const { activeRosary, clearActiveRosary } = useAppStore();
+
+  // Check if the saved activeRosary is actually fully completed (stale state)
+  const hasActiveRosary = useMemo(() => {
+    if (!activeRosary) return false;
+    const allStepIds = getInitialSteps().map(s => s.id);
+    const allCompleted = allStepIds.every(id => activeRosary.completedSteps.includes(id));
+    if (allCompleted) {
+      clearActiveRosary();
+      return false;
+    }
+    return true;
+  }, [activeRosary, clearActiveRosary]);
   const [stats, setStats] = useState([
     { icon: Flame, label: 'Ofensiva', value: '0 dias', color: 'text-orange-400' },
     { icon: Trophy, label: 'Metas', value: '0 / 30', color: 'text-yellow-400' },
@@ -101,7 +114,7 @@ export default function Dashboard() {
         className="w-full py-4 text-lg flex items-center justify-center gap-3 shadow-2xl shadow-indigo-600/40 bg-gradient-to-r from-indigo-600 to-purple-600 border-none hover:scale-[1.02] transition-transform"
       >
         <Play fill="currentColor" size={24} />
-        {activeRosary ? 'Continuar o Terço...' : 'Rezar o Terço'}
+        {hasActiveRosary ? 'Continuar o Terço...' : 'Rezar o Terço'}
       </Button>
 
       <section className="space-y-3">
